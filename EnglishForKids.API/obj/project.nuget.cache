@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Pprg2pimeJ3zsw34yFt+j+kR3nBBNcau3ZtZmHWLFpSz9xDYKjD+kcdW5OXd8CXondh/HtJB3ph19dr+Fpiy+A==",
+  "dgSpecHash": "ktCyk7g1uSUURRHhQzvPlPZ5XgEpINQ9t/utuPQREI3vlTZE1u3w0Srgfn/gyST4DQzYPvR4FQjYMGexnfpRUA==",
   "success": true,
-  "projectFilePath": "D:\\Thuc_Tap_VnXpress\\Clone_giaoduc\\Api_Bioliffe\\EnglishForKids.API\\EnglishForKids.API.csproj",
+  "projectFilePath": "D:\\Thuc_Tap_VnXpress\\Clone_giaoduc\\API-EnglishForKids\\EnglishForKids.API\\EnglishForKids.API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\nguye\\.nuget\\packages\\awssdk.core\\3.7.100.14\\awssdk.core.3.7.100.14.nupkg.sha512",
     "C:\\Users\\nguye\\.nuget\\packages\\awssdk.securitytoken\\3.7.100.14\\awssdk.securitytoken.3.7.100.14.nupkg.sha512",
