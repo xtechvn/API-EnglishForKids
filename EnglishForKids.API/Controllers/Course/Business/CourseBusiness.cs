@@ -1,23 +1,24 @@
 ﻿using HuloToys_Service.ElasticSearch;
 using HuloToys_Service.Models.Article;
+using HuloToys_Service.Models.Course;
 using HuloToys_Service.Models.ElasticSearch;
 using HuloToys_Service.Utilities.Lib;
 
 namespace HuloToys_Service.Controllers.News.Business
 {
-    public partial class NewsBusiness
+    public partial class CourseBusiness
     {
         public IConfiguration configuration;
-        public ArticleService article_service;
+        public CourseService course_service;
 
         public ArticleCategoryService articleCategoryESService;
 
         public GroupProductESService groupProductESService;
-        public NewsBusiness(IConfiguration _configuration)
+        public CourseBusiness(IConfiguration _configuration)
         {
 
             configuration = _configuration;
-            article_service = new ArticleService(_configuration["DataBaseConfig:Elastic:Host"], _configuration);
+            course_service = new CourseService(_configuration["DataBaseConfig:Elastic:Host"], _configuration);
 
             articleCategoryESService = new ArticleCategoryService(_configuration["DataBaseConfig:Elastic:Host"], _configuration);
 
@@ -28,7 +29,7 @@ namespace HuloToys_Service.Controllers.News.Business
         {
             try
             {
-                var article_list = article_service.GetArticleDetailById(article_id);
+                var article_list = course_service.GetArticleDetailById(article_id);
                 return article_list;
             }
             catch (Exception ex)
@@ -84,13 +85,13 @@ namespace HuloToys_Service.Controllers.News.Business
         /// </summary>
         /// <param name="category_parent_id">Là id cha của các chuyên mục  tin tức</param>
         /// <returns></returns>
-        public async Task<List<CategoryArticleModel>> getListNews(int category_id, int take)
+        public async Task<List<CourseModel>> getListCourse(int category_id, int take)
         {
-            var list_article = new List<CategoryArticleModel>();
+            var list_article = new List<CourseModel>();
             try
             {
                 // Lấy ra danh sách id các bài viết mới nhất
-                var obj_top_story = article_service.getListNews(category_id, take);
+                var obj_top_story = course_service.getListCourse(category_id, take);
 
                 return obj_top_story;
             }
@@ -202,13 +203,13 @@ namespace HuloToys_Service.Controllers.News.Business
         /// </summary>
         /// <param name="cate_id"></param>
         /// <returns></returns>
-        public async Task<int> getTotalItemNewsByCategoryId(int cate_id)
+        public async Task<int> getTotalItemCoursesByCategoryId(int cate_id)
         {
-            var list_article = new List<CategoryArticleModel>();
+            var list_article = new List<CategoryCourseModel>();
             try
             {
                 // Lấy ra danh sách id các bài viết theo chuyên mục
-                var total = article_service.getTotalItemNewsByCategoryId(cate_id);
+                var total = course_service.getTotalItemCoursesByCategoryId(cate_id);
 
                 return total;
             }

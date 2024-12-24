@@ -136,7 +136,7 @@ namespace HuloToys_Service.Controllers
             {
                 JArray objParr = null;
                 if (CommonHelper.GetParamWithKey(input.token, out objParr, configuration["KEY:private_key"]))
-                {
+                    {
                     int node_redis = Convert.ToInt32(configuration["Redis:Database:db_article"]);
                     var _category_detail = new GroupProductModel();
                     var list_article = new List<CategoryArticleModel>();
