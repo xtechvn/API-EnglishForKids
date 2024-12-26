@@ -68,5 +68,42 @@ namespace API_CORE.Controllers.CACHE
                 return Ok(new { status = (int)ResponseType.ERROR, _token = input.token, msg = "Sync error !!!" });
             }
         }
+        [HttpPost("sync-course.json")]
+        public async Task<ActionResult> clearCacheCourse([FromBody] APIRequestGenericModel input)
+        {
+            try
+            {
+                string j_param = "{'course_id':'39','category_id':'-1'}";
+                //  token = CommonHelper.Encode(j_param, configuration["DataBaseConfig:key_api:api_manual"]);
+
+                JArray objParr = null;
+                if (input != null && input.token != null && CommonHelper.GetParamWithKey(input.token, out objParr, configuration["KEY:private_key"]))
+                {
+
+                    long course_id = Convert.ToInt64(objParr[0]["course_id"]);
+                    var category_list_id = objParr[0]["category_id"].ToString().Split(",");
+                    redisService.clear(CacheType.ARTICLE_ID + course_id, Convert.ToInt32(configuration["Redis:Database:db_common"]));
+                    for (int i = 0; i <= category_list_id.Length - 1; i++)
+                    {
+                        int category_id = Convert.ToInt32(category_list_id[i]);
+                        redisService.clear(CacheType.COURSE_LISTING + category_id, Convert.ToInt32(configuration["Redis:Database:db_course"]));
+                        redisService.clear(CacheType.CATEGORY_NEWS + "1", Convert.ToInt32(configuration["Redis:Database:db_common"]));
+                        redisService.clear(CacheType.CATEGORY_NEWS + category_id, Convert.ToInt32(configuration["Redis:Database:db_common"]));
+                        redisService.clear(CacheType.ARTICLE_MOST_VIEWED, Convert.ToInt32(configuration["Redis:Database:db_common"]));
+                    }
+
+                    return Ok(new { status = (int)ResponseType.SUCCESS, _token = input.token, msg = "Sync Successfully !!!", article_id = course_id, category_list_id = category_list_id });
+                }
+                else
+                {
+                    return Ok(new { status = (int)ResponseType.FAILED, _token = input.token, msg = "Token Error !!!" });
+                }
+            }
+            catch (Exception ex)
+            {
+                LogHelper.InsertLogTelegramByUrl(configuration["telegram:log_try_catch:bot_token"], configuration["telegram:log_try_catch:group_id"], "sync-article.json - clearCacheArticle " + ex.Message + " token=" + input.token.ToString());
+                return Ok(new { status = (int)ResponseType.ERROR, _token = input.token, msg = "Sync error !!!" });
+            }
+        }
     }
 }

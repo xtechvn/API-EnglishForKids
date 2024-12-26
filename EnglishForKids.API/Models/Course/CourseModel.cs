@@ -4,7 +4,7 @@ namespace HuloToys_Service.Models.Course
 {
     public class CourseModel
     {
-        [PropertyName("Id")]
+        [PropertyName("id")]
         public int id { get; set; }
 
         [PropertyName("Title")]
