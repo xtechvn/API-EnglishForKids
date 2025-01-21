@@ -45,10 +45,11 @@ namespace API_CORE.Controllers.CACHE
 
                     long article_id = Convert.ToInt64(objParr[0]["article_id"]);
                     var category_list_id = objParr[0]["category_id"].ToString().Split(",");
-                    redisService.clear(CacheType.ARTICLE_ID + article_id, Convert.ToInt32(configuration["Redis:Database:db_common"]));
+                    redisService.clear(CacheType.ARTICLE_ID + article_id, Convert.ToInt32(configuration["Redis:Database:db_article"]));
                     for (int i = 0; i <= category_list_id.Length - 1; i++)
                     {
                         int category_id = Convert.ToInt32(category_list_id[i]);
+                        redisService.clear(CacheType.ARTICLE_CATEGORY_ID + "-1", Convert.ToInt32(configuration["Redis:Database:db_article"]));
                         redisService.clear(CacheType.ARTICLE_CATEGORY_ID + category_id, Convert.ToInt32(configuration["Redis:Database:db_article"]));
                         redisService.clear(CacheType.CATEGORY_NEWS + "1", Convert.ToInt32(configuration["Redis:Database:db_common"]));
                         redisService.clear(CacheType.CATEGORY_NEWS + category_id, Convert.ToInt32(configuration["Redis:Database:db_common"]));
