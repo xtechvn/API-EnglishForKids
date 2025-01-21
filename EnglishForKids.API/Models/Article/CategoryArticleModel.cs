@@ -29,6 +29,10 @@ namespace HuloToys_Service.Models.Article
 
         [PropertyName("PublishDate")]
         public DateTime publish_date { get; set; }
+        [PropertyName("Position")]
+        public int? position { get; set; }
+
+
 
         [PropertyName("PageView")]
         public int? pageview { get; set; }
