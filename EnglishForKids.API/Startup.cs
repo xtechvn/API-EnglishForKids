@@ -1,6 +1,8 @@
 ﻿using Entities.ConfigModels;
+using HuloToys_Service.Data;
 using HuloToys_Service.RedisWorker;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -16,11 +18,17 @@ namespace HuloToys_Service
         public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
-        {        
-
+        {
+            // Đăng ký cấu hình từ appsettings.json
+            services.Configure<DataBaseConfig>(Configuration.GetSection("DataBaseConfig"));
+            services.Configure<MailConfig>(Configuration.GetSection("MailConfig"));
+            services.Configure<DomainConfig>(Configuration.GetSection("DomainConfig"));
             // khoi tao lan dau tien chuoi config khi ung dung duoc chay.
-                        
 
+            // Đăng ký ApplicationDbContext
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(connectionString));
             // Register services   
             services.AddSingleton(Configuration);
            
