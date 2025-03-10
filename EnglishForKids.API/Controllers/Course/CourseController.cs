@@ -229,6 +229,135 @@ namespace HuloToys_Service.Controllers.Course
                 });
             }
         }
+        //[AllowAnonymous]
+        //[HttpPost("get-results.json")]
+        //public async Task<ActionResult> GetQuizResults([FromBody] GetQuizResultRequest request)
+        //{
+        //    try
+        //    {
+        //        int userId = request.UserId;
+        //        int quizParentId = request.QuizId;
+
+        //        // 1️⃣ Lấy danh sách các Sub-Quiz
+        //        var subQuizIds = await _dbContext.Quiz
+        //            .Where(q => q.ParentId == quizParentId)
+        //            .Select(q => q.Id)
+        //            .ToListAsync();
+
+        //        if (!subQuizIds.Any())
+        //        {
+        //            return BadRequest(new QuizProgressResponse
+        //            {
+        //                Status = 1,
+        //                Message = "Không tìm thấy Sub-Quiz nào."
+        //            });
+        //        }
+
+        //        // 2️⃣ Lấy danh sách kết quả của user
+        //        var userResults = await _dbContext.QuizResult
+        //            .Where(r => subQuizIds.Contains(r.QuizId) && r.UserId == userId)
+        //            .ToListAsync();
+
+        //        // 3️⃣ Lấy danh sách câu hỏi của Quiz
+        //        var allQuizQuestions = await _dbContext.Quiz
+        //            .Where(q => subQuizIds.Contains(q.Id))
+        //            .OrderBy(q => q.Id) // ✅ Giữ nguyên thứ tự câu hỏi theo ID
+        //            .Select(q => new QuestionModel
+        //            {
+        //                QuestionId = q.Id,
+        //                Description = q.Description,
+        //                Answers = _dbContext.QuizAnswer
+        //                    .Where(ans => ans.QuizId == q.Id)
+        //                    .Select(ans => new AnswerModel
+        //                    {
+        //                        AnswerId = ans.Id,
+        //                        Description = ans.Description,
+        //                        IsCorrect = ans.IsCorrectAnswer,
+        //                        Note = ans.Note
+        //                    }).ToList()
+        //            })
+        //            .ToListAsync();
+
+        //        if (!allQuizQuestions.Any())
+        //        {
+        //            return BadRequest(new QuizProgressResponse
+        //            {
+        //                Status = 1,
+        //                Message = "Không tìm thấy câu hỏi nào."
+        //            });
+        //        }
+
+        //        // 4️⃣ Xác định danh sách câu hỏi đã làm và chưa làm
+        //        var answeredQuestionIds = userResults.Select(r => r.QuizId).ToList();
+        //        var allQuestionIds = allQuizQuestions.Select(q => q.QuestionId).ToList();
+        //        var skippedQuestionIds = allQuestionIds.Except(answeredQuestionIds).ToList();
+
+        //        // ✅ 5️⃣ Xác định **câu chưa làm đầu tiên** theo thứ tự ban đầu
+        //        var nextQuestionIndex = allQuizQuestions.FindIndex(q => skippedQuestionIds.Contains(q.QuestionId));
+        //        var nextQuestion = nextQuestionIndex != -1 ? allQuizQuestions[nextQuestionIndex] : null;
+        //        bool isCompleted = skippedQuestionIds.Count == 0;
+
+        //        // ✅ 6️⃣ **Giữ nguyên thứ tự câu hỏi, chỉ đánh dấu câu nào đã làm**
+        //        var allQuestionsWithStatus = allQuizQuestions
+        //            .Select(q => new QuestionModel
+        //            {
+        //                QuestionId = q.QuestionId,
+        //                Description = q.Description,
+        //                Answers = q.Answers,
+        //                IsAnswered = answeredQuestionIds.Contains(q.QuestionId), // ✅ Đánh dấu câu đã làm
+        //                SelectedAnswer = userResults.FirstOrDefault(r => r.QuizId == q.QuestionId)?.QuizAnswerId // ✅ Nếu đã làm, lấy câu trả lời đã chọn
+        //            })
+        //            .ToList();
+
+        //        // ✅ 7️⃣ **Fix lỗi `CorrectAnswers` chỉ lấy đáp án đã chọn**
+        //        var correctAnswers = userResults
+        //            .Where(r => _dbContext.QuizAnswer.Any(a => a.Id == r.QuizAnswerId && a.IsCorrectAnswer))
+        //            .Select(r => new QuestionModel
+        //            {
+        //                QuestionId = r.QuizId,
+        //                Description = allQuizQuestions.First(q => q.QuestionId == r.QuizId).Description,
+        //                Answers = allQuizQuestions.First(q => q.QuestionId == r.QuizId).Answers
+        //                    .Where(a => a.AnswerId == r.QuizAnswerId)
+        //                    .ToList()
+        //            })
+        //            .ToList();
+
+        //        var incorrectAnswers = userResults
+        //            .Where(r => _dbContext.QuizAnswer.Any(a => a.Id == r.QuizAnswerId && !a.IsCorrectAnswer))
+        //            .Select(r => new QuestionModel
+        //            {
+        //                QuestionId = r.QuizId,
+        //                Description = allQuizQuestions.First(q => q.QuestionId == r.QuizId).Description,
+        //                Answers = allQuizQuestions.First(q => q.QuestionId == r.QuizId).Answers
+        //                    .Where(a => a.AnswerId == r.QuizAnswerId)
+        //                    .ToList()
+        //            })
+        //            .ToList();
+
+        //        // ✅ 8️⃣ **Trả về kết quả với thứ tự câu hỏi ban đầu**
+        //        return Ok(new QuizProgressResponse
+        //        {
+        //            Status = (int)ResponseType.SUCCESS,
+        //            Completed = isCompleted,
+        //            NextQuestionIndex = nextQuestionIndex != -1 ? nextQuestionIndex : 0, // ✅ Không đảo vị trí câu hỏi
+        //            CorrectCount = correctAnswers.Count,
+        //            CorrectAnswers = correctAnswers,
+        //            IncorrectAnswers = incorrectAnswers,
+        //            SkippedQuestions = nextQuestion != null ? new List<QuestionModel> { nextQuestion } : new List<QuestionModel>(),
+        //            AllQuestions = allQuestionsWithStatus,
+        //            Message = isCompleted ? "Người dùng đã hoàn thành quiz." : "Tiếp tục làm bài."
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Ok(new
+        //        {
+        //            Status = (int)ResponseType.FAILED,
+        //            Message = "Lỗi hệ thống: " + ex.ToString()
+        //        });
+        //    }
+        //}
+
         [AllowAnonymous]
         [HttpPost("get-results.json")]
         public async Task<ActionResult> GetQuizResults([FromBody] GetQuizResultRequest request)
@@ -236,9 +365,8 @@ namespace HuloToys_Service.Controllers.Course
             try
             {
                 int userId = request.UserId;
-                int quizParentId = request.QuizId; // Quiz cha
+                int quizParentId = request.QuizId;
 
-                // 1️⃣ Lấy danh sách các Sub-Quiz
                 var subQuizIds = await _dbContext.Quiz
                     .Where(q => q.ParentId == quizParentId)
                     .Select(q => q.Id)
@@ -253,26 +381,13 @@ namespace HuloToys_Service.Controllers.Course
                     });
                 }
 
-                // 2️⃣ Lấy danh sách kết quả của user
                 var userResults = await _dbContext.QuizResult
                     .Where(r => subQuizIds.Contains(r.QuizId) && r.UserId == userId)
                     .ToListAsync();
 
-                // 3️⃣ Nếu chưa làm câu nào
-                if (!userResults.Any())
-                {
-                    return Ok(new QuizProgressResponse
-                    {
-                        Status = (int)ResponseType.SUCCESS,
-                        Completed = false,
-                        NextQuestionIndex = 0,
-                        Message = "Người dùng chưa làm bài quiz này."
-                    });
-                }
-
-                // 4️⃣ Lấy danh sách câu hỏi của Sub-Quiz
                 var allQuizQuestions = await _dbContext.Quiz
                     .Where(q => subQuizIds.Contains(q.Id))
+                    .OrderBy(q => q.Id)
                     .Select(q => new QuestionModel
                     {
                         QuestionId = q.Id,
@@ -298,37 +413,57 @@ namespace HuloToys_Service.Controllers.Course
                     });
                 }
 
-                // 5️⃣ Xác định câu tiếp theo
                 var answeredQuestionIds = userResults.Select(r => r.QuizId).ToList();
-                var nextQuestion = allQuizQuestions.FirstOrDefault(q => !answeredQuestionIds.Contains(q.QuestionId));
-                bool isCompleted = answeredQuestionIds.Count >= subQuizIds.Count;
+                var allQuestionIds = allQuizQuestions.Select(q => q.QuestionId).ToList();
+                var skippedQuestionIds = allQuestionIds.Except(answeredQuestionIds).ToList();
 
-                // 6️⃣ Tính số câu đúng
-                int correctCount = userResults.Count(r =>
-                    _dbContext.QuizAnswer.Any(a => a.Id == r.QuizAnswerId && a.IsCorrectAnswer)
-                );
-
-                // 7️⃣ ✅ **Fix lỗi `CorrectAnswers` chỉ lấy đáp án đã chọn**
                 var correctAnswers = allQuizQuestions
-                    .Where(q => answeredQuestionIds.Contains(q.QuestionId))
+                    .Where(q => answeredQuestionIds.Contains(q.QuestionId) &&
+                                userResults.Any(r => r.QuizId == q.QuestionId && q.Answers.Any(a => a.AnswerId == r.QuizAnswerId && a.IsCorrect)))
                     .Select(q => new QuestionModel
                     {
                         QuestionId = q.QuestionId,
                         Description = q.Description,
-                        Answers = q.Answers.Where(a => userResults.Any(ur => ur.QuizAnswerId == a.AnswerId)).ToList() // 🔥 Chỉ lấy đáp án user đã chọn
+                        Answers = q.Answers.Where(a => userResults.Any(ur => ur.QuizAnswerId == a.AnswerId)).ToList()
                     })
                     .ToList();
-                var nextQuestionIndex = correctAnswers.FindIndex(q => !answeredQuestionIds.Contains(q.QuestionId));
+
+                var incorrectAnswers = allQuizQuestions
+                    .Where(q => answeredQuestionIds.Contains(q.QuestionId) &&
+                                userResults.Any(r => r.QuizId == q.QuestionId && q.Answers.Any(a => a.AnswerId == r.QuizAnswerId && !a.IsCorrect)))
+                    .Select(q => new QuestionModel
+                    {
+                        QuestionId = q.QuestionId,
+                        Description = q.Description,
+                        Answers = q.Answers.Where(a => userResults.Any(ur => ur.QuizAnswerId == a.AnswerId)).ToList()
+                    })
+                    .ToList();
+
+                // ✅ 6️⃣ **Trả về tất cả câu bị bỏ qua**
+                var skippedQuestions = allQuizQuestions
+                    .Where(q => skippedQuestionIds.Contains(q.QuestionId))
+                    .ToList();
+
+                int nextQuestionIndex = skippedQuestions.Any() ? allQuizQuestions.FindIndex(q => q.QuestionId == skippedQuestions.First().QuestionId) : 0;
 
                 return Ok(new QuizProgressResponse
                 {
                     Status = (int)ResponseType.SUCCESS,
-                    Completed = isCompleted,
-                    NextQuestionIndex = isCompleted ? null : (nextQuestion != null ? allQuizQuestions.IndexOf(nextQuestion) : null),
-                    CorrectCount = correctCount,
-                    CorrectAnswers = correctAnswers, // ✅ Fix lỗi
-                    IncorrectAnswers = allQuizQuestions.Where(q => answeredQuestionIds.Contains(q.QuestionId) && !q.Answers.Any(a => a.IsCorrect)).ToList(),
-                    Message = isCompleted ? "Người dùng đã hoàn thành quiz." : "Tiếp tục làm bài."
+                    Completed = skippedQuestions.Count == 0,
+                    NextQuestionIndex = nextQuestionIndex,
+                    CorrectCount = correctAnswers.Count,
+                    CorrectAnswers = correctAnswers,
+                    IncorrectAnswers = incorrectAnswers,
+                    SkippedQuestions = skippedQuestions,
+                    AllQuestions = allQuizQuestions.Select(q => new QuestionModel
+                    {
+                        QuestionId = q.QuestionId,
+                        Description = q.Description,
+                        Answers = q.Answers,
+                        IsAnswered = answeredQuestionIds.Contains(q.QuestionId),
+                        SelectedAnswer = userResults.FirstOrDefault(r => r.QuizId == q.QuestionId)?.QuizAnswerId
+                    }).ToList(),
+                    Message = skippedQuestions.Count == 0 ? "Người dùng đã hoàn thành quiz." : "Tiếp tục làm bài."
                 });
             }
             catch (Exception ex)
@@ -340,6 +475,8 @@ namespace HuloToys_Service.Controllers.Course
                 });
             }
         }
+
+
         [AllowAnonymous]
         [HttpPost("reset-quiz.json")]
         public async Task<ActionResult> ResetQuiz([FromBody] GetQuizResultRequest request)
