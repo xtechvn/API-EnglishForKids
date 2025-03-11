@@ -31,7 +31,7 @@ namespace HuloToys_Service.Models.Course
 
         public DateTime? UpdatedDate { get; set; }
 
-        public bool IsDelete { get; set; } // Đánh dấu đã xóa
+        public int IsDelete { get; set; } // Đánh dấu đã xóa
 
         public int? ParentId { get; set; } // Nếu là quiz con của quiz khác
     }

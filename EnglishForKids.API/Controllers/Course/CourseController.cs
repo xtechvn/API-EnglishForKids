@@ -386,7 +386,7 @@ namespace HuloToys_Service.Controllers.Course
                     .ToListAsync();
 
                 var allQuizQuestions = await _dbContext.Quiz
-                    .Where(q => subQuizIds.Contains(q.Id))
+                    .Where(q => subQuizIds.Contains(q.Id) && q.IsDelete == 0)
                     .OrderBy(q => q.Id)
                     .Select(q => new QuestionModel
                     {
