@@ -229,6 +229,88 @@ namespace HuloToys_Service.Controllers.Course
                 });
             }
         }
+
+
+        [AllowAnonymous]
+        [HttpPost("get-lesson-detail.json")]
+        public async Task<IActionResult> GetLessonDetail([FromBody] LessonDetail request)
+        {
+            try
+            {
+                // 🔥 Lấy dữ liệu khóa học từ Redis
+                string redisKey = $"COURSE_DETAIL_{request.CourseId}";
+                int redisDbIndex = int.Parse(configuration["Redis:Database:db_course"]);
+                string redisData = await _redisService.GetAsync(redisKey, redisDbIndex);
+
+                if (string.IsNullOrEmpty(redisData))
+                {
+                    return NotFound(new { success = false, message = "Không tìm thấy khóa học." });
+                }
+
+                // 🛑 Deserialize JSON thành object
+                var courseModel = JsonConvert.DeserializeObject<CourseDetailViewModel>(redisData);
+                if (courseModel == null || courseModel.Chapters == null)
+                {
+                    return NotFound(new { success = false, message = "Dữ liệu khóa học không hợp lệ." });
+                }
+
+                // 🔎 Tìm bài học hoặc quiz theo LessonId hoặc QuizId
+                var lesson = courseModel.Chapters
+                    .SelectMany(c => c.Items)
+                    .FirstOrDefault(i => i.LessonId == request.LessonId);
+
+                var quiz = courseModel.Chapters
+                    .SelectMany(c => c.Items)
+                    .FirstOrDefault(i => i.QuizId == request.LessonId); // Lấy Quiz nếu LessonId thực chất là QuizId
+
+                // ✅ Nếu là bài giảng (Lesson)
+                if (lesson != null)
+                {
+                    return Ok(new
+                    {
+                        videoUrl = lesson.Files?.FirstOrDefault(f => f.Type == 40 && f.Path.EndsWith(".mp4"))?.Path,
+                        audioUrl = lesson.Files?.FirstOrDefault(f => f.Type == 40 && f.Path.EndsWith(".mp3"))?.Path,
+                        articleContent = lesson.Article,
+                        articleFilesJson = lesson.Files?.Where(f => f.Type == 50).Select(f => new
+                        {
+                            name = System.IO.Path.GetFileName(f.Path),
+                            path = f.Path
+                        }),
+                        quizDataJson = new List<object>() // Không có quiz
+                    });
+                }
+
+                // ✅ Nếu là Quiz (trả về câu hỏi của Quiz)
+                if (quiz != null)
+                {
+                    return Ok(new
+                    {
+                        videoUrl = (string)null,
+                        audioUrl = (string)null,
+                        articleContent = (string)null,
+                        articleFilesJson = new List<object>(),
+                        quizDataJson = quiz.Questions?.Select(q => new
+                        {
+                            questionId = q.QuestionId,
+                            questionText = q.Description,
+                            options = q.Answers?.Select(a => new
+                            {
+                                optionId = a.AnswerId,
+                                optionText = a.Description
+                            })
+                        })
+                    });
+                }
+
+                return NotFound(new { success = false, message = "Không tìm thấy bài học hoặc quiz." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Lỗi hệ thống", error = ex.Message });
+            }
+        }
+
+
         //[AllowAnonymous]
         //[HttpPost("get-results.json")]
         //public async Task<ActionResult> GetQuizResults([FromBody] GetQuizResultRequest request)
