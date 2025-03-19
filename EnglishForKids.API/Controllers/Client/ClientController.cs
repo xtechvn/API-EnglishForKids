@@ -21,6 +21,11 @@ using Entities.Models;
 using HuloToys_Service.Utilities.lib;
 using HuloToys_Service.Controllers.Client.Business;
 using Nest;
+using HuloToys_Service.Data;
+using HuloToys_Service.Models.Course;
+using Telegram.Bot.Types;
+using Microsoft.EntityFrameworkCore;
+using EnglishForKids.API.Entities.Models;
 
 namespace HuloToys_Service.Controllers
 {
@@ -37,8 +42,9 @@ namespace HuloToys_Service.Controllers
         private readonly ClientServices clientServices;
         private readonly RedisConn _redisService;
         private readonly EmailService _emailService;
+        private readonly ApplicationDbContext _dbContext;
 
-        public ClientController(IConfiguration _configuration, RedisConn redisService) {
+        public ClientController(IConfiguration _configuration, RedisConn redisService, ApplicationDbContext dbContext) {
             configuration= _configuration;
             workQueueClient=new WorkQueueClient(configuration);
             accountClientESService = new AccountClientESService(_configuration["DataBaseConfig:Elastic:Host"], _configuration);
@@ -48,6 +54,8 @@ namespace HuloToys_Service.Controllers
             _redisService.Connect();
             clientServices = new ClientServices(configuration);
             _emailService = new EmailService(configuration);
+            _dbContext = dbContext;
+
         }
         [HttpPost("login")]
         public async Task<ActionResult> ClientLogin([FromBody] APIRequestGenericModel input)
@@ -118,7 +126,7 @@ namespace HuloToys_Service.Controllers
                                                 msg = "Success",
                                                 data = new ClientLoginResponseModel()
                                                 {
-                                                    //account_client_id = account_client_exists.id,
+                                                    account_client_id = account_client_exists.id,
                                                     user_name = account_client_exists.username,
                                                     name = client.clientname,
                                                     token = token,
@@ -145,7 +153,7 @@ namespace HuloToys_Service.Controllers
                                                 msg = "Success",
                                                 data = new ClientLoginResponseModel()
                                                 {
-                                                    //account_client_id = account_client_exists.id,
+                                                    account_client_id = account_client_exists.id,
                                                     user_name = account_client_exists.username,
                                                     name = client.clientname,
                                                     token = token,
@@ -154,6 +162,30 @@ namespace HuloToys_Service.Controllers
                                                 }
                                             });
                                         }
+                                    }
+                                }
+                                //-- If nothing, Check SQL:
+                                var account_sql = await _dbContext.AccountClients.FirstOrDefaultAsync(qr => qr.UserName.Trim() == request.user_name && qr.Password == request.password);
+                                if (account_sql != null && account_sql.Id>0)
+                                {
+                                    var client_sql = await _dbContext.Clients.FirstOrDefaultAsync(qr => qr.Id==account_sql.ClientId);
+                                    if(client_sql!=null && client_sql.Id > 0)
+                                    {
+                                        var token = await clientServices.GenerateToken(account_sql.UserName, ipAddress);
+                                        return Ok(new
+                                        {
+                                            status = (int)ResponseType.SUCCESS,
+                                            msg = "Success",
+                                            data = new ClientLoginResponseModel()
+                                            {
+                                                account_client_id = account_sql.Id,
+                                                user_name = account_sql.UserName,
+                                                name = client_sql.ClientName,
+                                                token = token,
+                                                ip = ipAddress,
+                                                time_expire = clientServices.GetExpiredTimeFromToken(token)
+                                            }
+                                        });
                                     }
                                 }
                             }

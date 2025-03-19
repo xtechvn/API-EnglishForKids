@@ -15,7 +15,7 @@ namespace Caching.Elasticsearch
 {
     public class AddressClientESService : ESRepository<AddressClientESModel>
     {
-        public string index = "address_client_biolife_store";
+        public string index = "address_client_englishforkid_store";
         private readonly IConfiguration configuration;
         private static string _ElasticHost;
 

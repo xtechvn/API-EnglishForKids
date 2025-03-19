@@ -2,6 +2,7 @@
 {
     public class ClientLoginResponseModel
     {
+        public int account_client_id { get; set; }
         public string  token { get; set; }
         public string user_name { get; set; }
         public string name { get; set; }

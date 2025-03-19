@@ -9,7 +9,7 @@ namespace HuloToys_Service.ElasticSearch
 {
     public class AccountApiESService : ESRepository<AccountApiESModel>
     {
-        //public string index = "account_api_biolife_store";
+        //public string index = "account_api_englishforkid_store";
         private readonly IConfiguration configuration;
         private static string _ElasticHost;
 
