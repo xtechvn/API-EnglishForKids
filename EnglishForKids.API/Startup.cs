@@ -1,5 +1,6 @@
 ﻿using Entities.ConfigModels;
 using HuloToys_Service.Data;
+using HuloToys_Service.Models.SQL;
 using HuloToys_Service.RedisWorker;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +30,8 @@ namespace HuloToys_Service
             // Đăng ký ApplicationDbContext
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(connectionString));
+            services.AddDbContext<DefaultDbContext>(options =>
                 options.UseSqlServer(connectionString));
             // Register services   
             services.AddSingleton(Configuration);
@@ -75,7 +78,7 @@ namespace HuloToys_Service
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
                 };
             });
-            
+
             services.Configure<DataBaseConfig>(Configuration.GetSection("DataBaseConfig"));
             services.Configure<MailConfig>(Configuration.GetSection("MailConfig"));
             services.Configure<DomainConfig>(Configuration.GetSection("DomainConfig"));

@@ -26,6 +26,9 @@ using HuloToys_Service.Models.Course;
 using Telegram.Bot.Types;
 using Microsoft.EntityFrameworkCore;
 using EnglishForKids.API.Entities.Models;
+using HuloToys_Service.Models.SQL;
+using BioLife.API.Utilities.lib;
+using SharpCompress.Common;
 
 namespace HuloToys_Service.Controllers
 {
@@ -41,9 +44,9 @@ namespace HuloToys_Service.Controllers
         private readonly ClientServices clientServices;
         private readonly RedisConn _redisService;
         private readonly EmailService _emailService;
-        private readonly ApplicationDbContext _dbContext;
+        private readonly DefaultDbContext _dbContext;
 
-        public ClientController(IConfiguration _configuration, RedisConn redisService, ApplicationDbContext dbContext) {
+        public ClientController(IConfiguration _configuration, RedisConn redisService, DefaultDbContext dbContext) {
             configuration= _configuration;
             workQueueClient=new WorkQueueClient(configuration);
             accountClientESService = new AccountClientESService(_configuration["DataBaseConfig:Elastic:Host"], _configuration);
@@ -95,8 +98,9 @@ namespace HuloToys_Service.Controllers
                                             status = (int)ResponseType.SUCCESS,
                                             msg = "Success",
                                             data = new ClientLoginResponseModel()
-                                            {   
-                                                //account_client_id = account_client_exists.id,
+                                            {
+                                                account_client_id = account_client.id,
+                                                client_id = client.id,
                                                 user_name = account_client.username,
                                                 name = client.clientname,
                                                 token= token,
@@ -126,6 +130,7 @@ namespace HuloToys_Service.Controllers
                                                 data = new ClientLoginResponseModel()
                                                 {
                                                     account_client_id = account_client_exists.id,
+                                                    client_id = client.id,
                                                     user_name = account_client_exists.username,
                                                     name = client.clientname,
                                                     token = token,
@@ -145,7 +150,7 @@ namespace HuloToys_Service.Controllers
                                         var account_client_exists = accountClientESService.GetByClientIdAndPassword(client.id, request.password);
                                         if (account_client_exists != null && account_client_exists.id > 0)
                                         {
-                                            var token = await clientServices.GenerateToken(account_client_exists.username, ipAddress);
+                                            var token = await clientServices.GenerateToken(account_client_exists.username,  ipAddress);
                                             return Ok(new
                                             {
                                                 status = (int)ResponseType.SUCCESS,
@@ -153,6 +158,7 @@ namespace HuloToys_Service.Controllers
                                                 data = new ClientLoginResponseModel()
                                                 {
                                                     account_client_id = account_client_exists.id,
+                                                    client_id = client.id,
                                                     user_name = account_client_exists.username,
                                                     name = client.clientname,
                                                     token = token,
@@ -170,7 +176,7 @@ namespace HuloToys_Service.Controllers
                                     var client_sql = await _dbContext.Clients.FirstOrDefaultAsync(qr => qr.Id==account_sql.ClientId);
                                     if(client_sql!=null && client_sql.Id > 0)
                                     {
-                                        var token = await clientServices.GenerateToken(account_sql.UserName, ipAddress);
+                                        var token = await clientServices.GenerateToken(account_sql.UserName,  ipAddress);
                                         return Ok(new
                                         {
                                             status = (int)ResponseType.SUCCESS,
@@ -178,8 +184,9 @@ namespace HuloToys_Service.Controllers
                                             data = new ClientLoginResponseModel()
                                             {
                                                 account_client_id = account_sql.Id,
+                                                client_id = client_sql.Id,
                                                 user_name = account_sql.UserName,
-                                                name = client_sql.ClientName,
+                                                name = client_sql.ClientName == null ? "" :StringHelper.RemoveSpecialCharacterExceptVietnameseCharacter(client_sql.ClientName),
                                                 token = token,
                                                 ip = ipAddress,
                                                 time_expire = clientServices.GetExpiredTimeFromToken(token)
@@ -198,14 +205,15 @@ namespace HuloToys_Service.Controllers
                                     if (client != null && client.id > 0)
                                     {
 
-                                        var token = await clientServices.GenerateToken(account_client.username , ipAddress);
+                                        var token = await clientServices.GenerateToken(account_client.username, ipAddress);
                                         return Ok(new
                                         {
                                             status = (int)ResponseType.SUCCESS,
                                             msg = "Success",
                                             data = new ClientLoginResponseModel()
                                             {
-                                                //account_client_id = account_client_exists.id,
+                                                account_client_id = account_client.id,
+                                                client_id=client.id,
                                                 user_name = account_client.username,
                                                 name = client.clientname,
                                                 token = token,
@@ -296,48 +304,108 @@ namespace HuloToys_Service.Controllers
                         }
                     }
 
-                    AccountClientViewModel model = new AccountClientViewModel()
+                    //AccountClientViewModel model = new AccountClientViewModel()
+                    //{
+                    //    ClientId = -1,
+                    //    ClientType = 0,
+                    //    Email = request.email == null || request.email.Trim() == "" ? "" : request.email.Trim(),
+                    //    Id = -1,
+                    //    isReceiverInfoEmail = request.is_receive_email == true ? (byte)1 : (byte)0,
+                    //    Name = StringHelper.RemoveSpecialCharacterExceptVietnameseCharacter(request.user_name.Trim()),
+                    //    ClientName = StringHelper.RemoveSpecialCharacterExceptVietnameseCharacter(request.user_name.Trim()),
+                    //    Password = request.password,
+                    //    Phone = request.phone,
+                    //    Status = 0,
+                    //    UserName = username_generate,
+                    //    GoogleToken = request.token,
+                    //    ClientCode =await _identifierServiceRepository.buildClientNo(0)
+                    //};
+                    //var queue_model = new ClientConsumerQueueModel()
+                    //{
+                    //    data_push = JsonConvert.SerializeObject(model),
+                    //    type = QueueType.ADD_USER
+                    //};
+                    var client = new HuloToys_Service.Models.SQL.Client()
                     {
-                        ClientId = -1,
-                        ClientType = 0,
+                        AgencyType=0,
+                        Avartar="",
+                        Birthday=DateTime.Now,
+                        BusinessAddress="",
+                        ClientCode="",
+                        ClientMapId=0,
+                        ClientName= StringHelper.RemoveSpecialCharacterExceptVietnameseCharacter(request.user_name.Trim()),
+                        ClientType=1,
                         Email = request.email == null || request.email.Trim() == "" ? "" : request.email.Trim(),
-                        Id = -1,
-                        isReceiverInfoEmail = request.is_receive_email == true ? (byte)1 : (byte)0,
-                        Name = request.user_name.Trim(),
-                        ClientName = request.user_name.Trim(),
-                        Password = request.password,
+                        ExportBillAddress="",
+                        Gender=0,
+                        IsReceiverInfoEmail=false,
+                        IsRegisterAffiliate=false,
+                        JoinDate=DateTime.Now,
+                        Note="",
+                        ParentId=0,
+                        PermisionType=0,
                         Phone = request.phone,
-                        Status = 0,
-                        UserName = username_generate,
-                        GoogleToken = request.token,
-                        ClientCode =await _identifierServiceRepository.buildClientNo(0)
+                        ReferralId="",
+                        SaleMapId= 0,
+                        Status=0,
+                        UpdateTime=DateTime.Now,
+                        TaxNo=""
                     };
-                    var queue_model = new ClientConsumerQueueModel()
-                    {
-                        data_push = JsonConvert.SerializeObject(model),
-                        type = QueueType.ADD_USER
-                    };
-                    bool result= workQueueClient.InsertQueueSimple(JsonConvert.SerializeObject(queue_model),QueueName.queue_app_push);
-                    if (result)
-                    {
+                    await _dbContext.Clients.AddAsync(client);
+                    // Lưu thay đổi vào cơ sở dữ liệu
+                    await _dbContext.SaveChangesAsync();
 
-                        var token = await clientServices.GenerateToken(username_generate, ipAddress);
-                        return Ok(new
+                    var account_client = new HuloToys_Service.Models.SQL.AccountClient()
+                    {
+                        ClientId= client.Id,
+                        ClientType=1,
+                        UserName = username_generate,
+                        Status=0,
+                        ForgotPasswordToken="",
+                        GroupPermission=0,
+                        Password= request.password,
+                        PasswordBackup= request.password
+                    };
+                    await _dbContext.AccountClients.AddAsync(account_client);
+                    // Lưu thay đổi vào cơ sở dữ liệu
+                    await _dbContext.SaveChangesAsync();
+                    //bool result= workQueueClient.InsertQueueSimple(JsonConvert.SerializeObject(queue_model),QueueName.queue_app_push);
+                    //if (result)
+                    //{
+
+                    //    var token = await clientServices.GenerateToken(username_generate,  ipAddress);
+                    //    return Ok(new
+                    //    {
+                    //        status = (int)ResponseType.SUCCESS,
+                    //        msg = "Success",
+                    //        data = new ClientLoginResponseModel()
+                    //        {
+                    //            //account_client_id = account_client_exists.id,
+                    //            user_name = username_generate,
+                    //            name = request.user_name.Trim(),
+                    //            token = token,
+                    //            ip = ipAddress,
+                    //            time_expire = clientServices.GetExpiredTimeFromToken(token)
+                    //        }
+                    //    });
+                    //}
+                    var token = await clientServices.GenerateToken(username_generate, ipAddress);
+                    return Ok(new
+                    {
+                        status = (int)ResponseType.SUCCESS,
+                        msg = "Success",
+                        data = new ClientLoginResponseModel()
                         {
-                            status = (int)ResponseType.SUCCESS,
-                            msg = "Success",
-                            data = new ClientLoginResponseModel()
-                            {
-                                //account_client_id = account_client_exists.id,
-                                user_name = username_generate,
-                                name = request.user_name.Trim(),
-                                token = token,
-                                ip = ipAddress,
-                                time_expire = clientServices.GetExpiredTimeFromToken(token)
-                            }
-                        });
-                    }
-                    
+                            account_client_id = account_client.Id,
+                            client_id = client.Id,
+                            user_name = username_generate,
+                            name = request.user_name.Trim(),
+                            token = token,
+                            ip = ipAddress,
+                            time_expire = clientServices.GetExpiredTimeFromToken(token)
+                        }
+                    });
+
                 }
 
             }

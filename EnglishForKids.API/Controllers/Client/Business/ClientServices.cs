@@ -29,7 +29,7 @@ namespace HuloToys_Service.Controllers.Client.Business
             try
             {
 
-                ClientFELoginModel model = new ClientFELoginModel()
+                var model = new
                 {
                     exprire = DateTime.Now.ToUniversalTime().AddDays(30),
                     ip=ip,
