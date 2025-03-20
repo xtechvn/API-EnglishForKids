@@ -31,7 +31,6 @@ namespace HuloToys_Service.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class ClientController : ControllerBase
     {
         private readonly IConfiguration configuration;
