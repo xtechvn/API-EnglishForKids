@@ -291,18 +291,18 @@ namespace HuloToys_Service.Controllers
                         }
 
                     }
-                    string username_generate = "u" + DateTime.Now.ToString("yyMMddHHmmss");
-                    for (int i = 1; i < 999; i++)
-                    {
-                        var value = username_generate + i.ToString().PadLeft(3, '0');
-                        var exists = accountClientESService.GetByUsername(value);
-                        if (exists != null) { continue; }
-                        else
-                        {
-                            username_generate = value; 
-                            break;
-                        }
-                    }
+                    //string username_generate = "u" + DateTime.Now.ToString("yyMMddHHmmss");
+                    //for (int i = 1; i < 999; i++)
+                    //{
+                    //    var value = username_generate + i.ToString().PadLeft(3, '0');
+                    //    var exists = accountClientESService.GetByUsername(value);
+                    //    if (exists != null) { continue; }
+                    //    else
+                    //    {
+                    //        username_generate = value; 
+                    //        break;
+                    //    }
+                    //}
 
                     //AccountClientViewModel model = new AccountClientViewModel()
                     //{
@@ -325,6 +325,16 @@ namespace HuloToys_Service.Controllers
                     //    data_push = JsonConvert.SerializeObject(model),
                     //    type = QueueType.ADD_USER
                     //};
+                    var exists_account_client = await _dbContext.AccountClients.FirstOrDefaultAsync(x=>x.UserName==(request.email == null || request.email.Trim() == "" ? "" : request.email.Trim()));
+                    if(exists_account_client!=null && exists_account_client.Id > 0)
+                    {
+                        return Ok(new
+                        {
+                            status = (int)ResponseType.FAILED,
+                            msg = "Email này đã được sử dụng để đăng ký tài khoản rồi, vui lòng đăng nhập hoặc nếu bạn quên thông tin, vui lòng chọn quên mật khẩu"
+                        });
+                    }
+                    var user_name = StringHelper.RemoveSpecialEmailCharacter(request.email == null || request.email.Trim() == "" ? "" : request.email.Trim());
                     var client = new HuloToys_Service.Models.SQL.Client()
                     {
                         AgencyType=0,
@@ -359,7 +369,7 @@ namespace HuloToys_Service.Controllers
                     {
                         ClientId= client.Id,
                         ClientType=1,
-                        UserName = username_generate,
+                        UserName = user_name,
                         Status=0,
                         ForgotPasswordToken="",
                         GroupPermission=0,
@@ -389,7 +399,7 @@ namespace HuloToys_Service.Controllers
                     //        }
                     //    });
                     //}
-                    var token = await clientServices.GenerateToken(username_generate, ipAddress);
+                    var token = await clientServices.GenerateToken(user_name, ipAddress);
                     return Ok(new
                     {
                         status = (int)ResponseType.SUCCESS,
@@ -398,7 +408,7 @@ namespace HuloToys_Service.Controllers
                         {
                             account_client_id = account_client.Id,
                             client_id = client.Id,
-                            user_name = username_generate,
+                            user_name = user_name,
                             name = request.user_name.Trim(),
                             token = token,
                             ip = ipAddress,
