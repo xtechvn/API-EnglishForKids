@@ -40,5 +40,12 @@ namespace HuloToys_Service.Models.Course
 
         [PropertyName("ListCategoryName")]
         public string list_category_name { get; set; }
+        // ✅ Thêm tổng số bài giảng
+        [PropertyName("TotalLessons")]
+        public int TotalLessons { get; set; }
+
+        // ✅ Thêm tổng thời lượng khóa học (phút)
+        [PropertyName("TotalDuration")]
+        public int TotalDuration { get; set; }
     }
 }
